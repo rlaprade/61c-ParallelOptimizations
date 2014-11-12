@@ -48,7 +48,10 @@ void calcDepthOptimized(float *depth, float *left, float *right, int imageWidth,
 					}
 
 					float squaredDifference = 0;
-                    float sq_diff[(2*featureHeight+1)*(2*featureWidth+1)];
+                    // int computable_width = 2*featureWidth+1 - (2*featureWidth+1 % 4);
+                    // float sq_diff[(2*featureHeight+1)*computable_width];
+                    // float *sq_diff_ptr = sq_diff;
+                    // int ptr = 0;
 
                     int boxY = -featureHeight;
                     while (boxY <= featureHeight)
@@ -73,8 +76,6 @@ void calcDepthOptimized(float *depth, float *left, float *right, int imageWidth,
                                 squaredDifference += sq_diff[i];
                             }
                             
-							// float difference = left[leftY * imageWidth + leftX] - right[rightY * imageWidth + rightX];
-							// squaredDifference += difference * difference;
                             boxX+=4;
 						}
                         while (boxX <= featureWidth) {
@@ -95,6 +96,10 @@ void calcDepthOptimized(float *depth, float *left, float *right, int imageWidth,
                         
                         boxY++;
 					}
+                    // for(int i=0; i<(2*featureHeight+1)*computable_width; i++) {
+                        // squaredDifference += sq_diff[i];
+                    // }
+                    
 
 					if ((minimumSquaredDifference == -1) || ((minimumSquaredDifference == squaredDifference) && (displacement(dx, dy) < displacement(minimumDx, minimumDy))) || (minimumSquaredDifference > squaredDifference))
 					{
