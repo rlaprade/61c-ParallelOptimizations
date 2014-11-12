@@ -38,28 +38,62 @@ void calcDepthOptimized(float *depth, float *left, float *right, int imageWidth,
 
 			for (int dy = -maximumDisplacement; dy <= maximumDisplacement; dy++)
 			{
+                int y_plus_dy = y + dy;
 				for (int dx = -maximumDisplacement; dx <= maximumDisplacement; dx++)
 				{
-					if (y + dy - featureHeight < 0 || y + dy + featureHeight >= imageHeight || x + dx - featureWidth < 0 || x + dx + featureWidth >= imageWidth)
+                    int x_plus_dx = x + dx;
+					if (y_plus_dy - featureHeight < 0 || y_plus_dy + featureHeight >= imageHeight || x_plus_dx - featureWidth < 0 || x_plus_dx + featureWidth >= imageWidth)
 					{
 						continue;
 					}
 
 					float squaredDifference = 0;
+                    float sq_diff[(2*featureHeight+1)*(2*featureWidth+1)];
 
-					for (int boxY = -featureHeight; boxY <= featureHeight; boxY++)
+                    int boxY = -featureHeight;
+                    while (boxY <= featureHeight)
 					{
-						for (int boxX = -featureWidth; boxX <= featureWidth; boxX++)
+                        int leftY = y + boxY;
+                        int rightY = dy + leftY;  //removed 1 addition
+                        int l_row_index = leftY * imageWidth;
+                        int r_row_index = rightY * imageWidth;
+                        int boxX = -featureWidth;
+                        while (boxX <= featureWidth-3)
 						{
 							int leftX = x + boxX;
-							int leftY = y + boxY;
 							int rightX = dx + leftX;  //removed 1 addition
-							int rightY = dy + leftY;  //removed 1 addition
-
-							float difference = left[leftY * imageWidth + leftX] - right[rightY * imageWidth + rightX];
-							squaredDifference += difference * difference;
-
+                            
+                            __m128 left_four = _mm_loadu_ps(left + l_row_index + leftX);
+                            __m128 rite_four = _mm_loadu_ps(right + r_row_index + rightX);
+                            __m128 diff = _mm_sub_ps(left_four, rite_four);
+                            __m128 sq_diff_reg = _mm_mul_ps(diff, diff);
+                            float sq_diff[4];
+                            _mm_store_ps(sq_diff, sq_diff_reg);
+                            for(int i=0; i<4; i++) {
+                                squaredDifference += sq_diff[i];
+                            }
+                            
+							// float difference = left[leftY * imageWidth + leftX] - right[rightY * imageWidth + rightX];
+							// squaredDifference += difference * difference;
+                            boxX+=4;
 						}
+                        while (boxX <= featureWidth) {
+                            int leftX = x + boxX;
+                            int rightX = dx + leftX;
+                            float difference = left[leftY * imageWidth + leftX] - right[rightY * imageWidth + rightX];
+                            squaredDifference += difference * difference;
+                            boxX++;
+                        }
+                        // switch (featureWidth-boxX) {
+                            // case 1:
+                        
+                            // case 2:
+                            
+                            // case 3:
+                            
+                        // }
+                        
+                        boxY++;
 					}
 
 					if ((minimumSquaredDifference == -1) || ((minimumSquaredDifference == squaredDifference) && (displacement(dx, dy) < displacement(minimumDx, minimumDy))) || (minimumSquaredDifference > squaredDifference))
