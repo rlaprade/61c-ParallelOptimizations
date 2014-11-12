@@ -24,15 +24,9 @@ void calcDepthOptimized(float *depth, float *left, float *right, int imageWidth,
     int row_index = 0;
 	for (int y = 0; y < imageHeight; y++)
 	{
-		for (int x = 0; x < featureWidth; x++) {
-            depth[row_index + x] = 0;
-        }
-        for (int x = imageWidth - featureWidth; x < imageWidth; x++) {
-            depth[row_index + x] = 0;
-        }
-		for (int x = featureWidth; x < imageWidth - featureWidth; x++)
+		for (int x = 0; x < imageWidth; x++)
 		{
-			if ((y < featureHeight) || (y >= imageHeight - featureHeight))
+			if ((y < featureHeight) || (y >= imageHeight - featureHeight) || (x < featureWidth) || (x >= imageWidth - featureWidth))
 			{
 				depth[row_index + x] = 0;
 				continue;
